@@ -165,7 +165,7 @@ TO SAVE DATA (MANUAL ONLY): Format: ### APPEND: project_bible.md (Content here) 
 # ==========================================
 # --- 3. THE INTERFACE ---
 # ==========================================
-st.set_page_config(page_title="Scribe Chassis V4.5 (Styled)", layout="wide", page_icon="👽")
+st.set_page_config(page_title="Scribe Online Team Edition", layout="wide", page_icon="👽")
 system = MissionControl()
 system.load_css()
 
@@ -425,4 +425,5 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "assis
                 system.update_file(selected_mission, target_file, payload)
                 system.log_event(selected_mission, "SYSTEM", f"Wrote to {target_file}")
             if st.button("CONFIRM WRITE", on_click=execute_save, key="persistent_save_final"):
+
                 st.success("Memory Updated.")
