@@ -1,0 +1,13 @@
+streamlit
+google-genai
+python-dotenv
+watchdog
+openai
+Pillow
+streamlit-paste-button
+st-copy-to-clipboard
+google-api-python-client
+google-auth
+google-auth-httplib2
+google-auth-oauthlib
+anthropic

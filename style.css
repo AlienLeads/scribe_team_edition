@@ -1,0 +1,121 @@
+/* style.css - V4.9: Full Void Mode (Pure Black & White) */
+
+/* --- 1. GLOBAL RESET --- */
+/* Forces the entire app to be Pure Black */
+.stApp {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* --- 2. SIDEBAR (Perfected) --- */
+[data-testid="stSidebar"] {
+    background-color: #000000;
+    border-right: 1px solid #00ff00;
+}
+[data-testid="stSidebar"] * {
+    color: #ffffff !important; /* Force white labels */
+}
+
+/* --- 3. MAIN CHAT TEXT (The Fix) --- */
+/* Forces all paragraphs, headers, and markdown to be White */
+.stMarkdown, .stMarkdown p, .stText {
+    color: #ffffff !important;
+}
+
+/* --- 4. SYSTEM ALERT BOXES --- */
+/* The "System Check" box - Black background, White text */
+div[data-testid="stAlert"] {
+    background-color: #111111 !important;
+    border: 1px solid #333 !important;
+    color: #ffffff !important;
+}
+div[data-testid="stAlert"] > div,
+div[data-testid="stAlert"] p {
+    color: #ffffff !important;
+}
+
+/* --- 5. CHAT MESSAGES --- */
+/* Ensures user/AI messages are white */
+[data-testid="stChatMessageContent"] {
+    color: #ffffff !important;
+}
+
+/* --- 6. INPUT FIELD --- */
+/* The box where you type */
+.stTextInput>div>div>input {
+    color: #ffffff !important;
+    background-color: #111111 !important; /* Slightly lighter than black to see the box */
+    border: 1px solid #333 !important;
+}
+.stTextInput>div>div>input:focus {
+    border-color: #00ff00 !important;
+}
+
+/* --- 7. HEADERS --- */
+h1, h2, h3 {
+    color: #00ff00 !important;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+/* --- 8. BUTTONS --- */
+.stButton>button {
+    color: #00ff00 !important;
+    border: 1px solid #00ff00 !important;
+    background-color: #000000 !important;
+}
+.stButton>button:hover {
+    background-color: #00ff00 !important;
+    color: #000000 !important;
+}
+
+/* --- 9. DROPDOWNS --- */
+div[data-baseweb="select"] > div {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+}
+
+
+/* --- 10. THE GEMINI INPUT CAPSULE (Reinforced) --- */
+
+/* 1. The Chin Container (Invisible Background) */
+div[data-testid="stBottomBlockContainer"] {
+    background-color: #000000 !important;
+    padding-bottom: 20px;
+}
+
+/* 2. The Input Box Container (The Pill Shape) */
+div[data-testid="stChatInput"] > div {
+    background-color: #1e1f20 !important; /* Dark Grey Pill */
+    border-radius: 28px !important;
+    border: 1px solid #444 !important;
+    padding: 2px;
+}
+
+/* 3. The Typing Area (THE FIX: Force Dark Grey) */
+textarea[data-testid="stChatInputTextArea"] {
+    background-color: #1e1f20 !important; /* Force Match Container */
+    color: #e3e3e3 !important; /* White Text */
+    caret-color: #00ff00 !important; /* Green Cursor */
+}
+
+/* 4. Placeholder Text */
+textarea[data-testid="stChatInputTextArea"]::placeholder {
+    color: #888888 !important;
+}
+
+/* 5. The Send Button */
+button[data-testid="stChatInputSubmitButton"] {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+/* 6. Send Button Hover */
+button[data-testid="stChatInputSubmitButton"]:hover {
+    color: #00ff00 !important;
+}
+
+/* 7. Hide Header */
+header[data-testid="stHeader"] {
+    background-color: #000000 !important;
+}
