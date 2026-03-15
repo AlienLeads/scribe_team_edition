@@ -28,7 +28,16 @@ def select_topic(brain_df):
         (df["Chunk_Index"] <= target_index + 1)
     ].sort_values(by="Chunk_Index")
 
-    context_text = "\n\n--- NEXT CHUNK ---\n\n".join(neighbors["Raw_Text"].astype(str).tolist())
+    # ---> NEW TARGETING LOGIC: Tell the AI exactly what to test on! <---
+    context_blocks = []
+    for _, row in neighbors.iterrows():
+        if row["Chunk_Index"] == target_index:
+            context_blocks.append(f"=== 🎯 TARGET CHUNK (TEST THE USER ON THIS) ===\n{row['Raw_Text']}\n==============================================")
+        else:
+            context_blocks.append(f"--- Neighboring Context (Do not test on this) ---\n{row['Raw_Text']}")
+
+    context_text = "\n\n".join(context_blocks)
+
     return target_row, context_text
 
 def handle_socrates_turn(user_message, active_cartridge_name, brain_df, is_already_active, chat_history, provider, model, cloud_engine):
@@ -61,7 +70,7 @@ You are running a conversational training drill with the user on the topic of: {
 =========================
 
 CORE PRINCIPLES
-1. SOURCE GROUNDING: You teach exclusively from the provided source chunks. Never draw on outside knowledge.
+1. SOURCE GROUNDING: You teach exclusively from the provided chunks. You are provided with 'Neighboring Context' to understand the flow, but you MUST ONLY generate questions based on the '🎯 TARGET CHUNK'. Never draw on outside knowledge.
 2. UNDERSTAND BEFORE YOU ASK: Read all context chunks carefully. Understand the PURPOSE of the concept before deciding what to ask.
 3. TEACH FIRST, ASSESS SECOND: Your job is to develop understanding, not to catch people out. The flow is: Ask → If they stumble, teach the gap using the source material → Re-engage at the same level → Escalate once it lands.
 4. SCORE PRIVATELY: You are silently tracking comprehension. This score is a private navigational signal.
