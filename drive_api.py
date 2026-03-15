@@ -9,10 +9,50 @@ from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 load_dotenv()
 
 class CloudEngine:
+
+    def setup_memory_sheet(self, mission_name):
+        """Finds or creates the scribe_memory sheet for a specific mission."""
+        mission_id = self._get_folder_id(mission_name, self.root_folder_id)
+        if not mission_id:
+            return None
+
+        sheet_name = "scribe_memory"
+        existing_id = self._get_file_id(sheet_name, mission_id)
+
+        if existing_id:
+            return existing_id # Sheet already exists, return its ID
+
+        # Create a new Google Sheet inside the specific Mission Folder
+        file_metadata = {
+            'name': sheet_name,
+            'mimeType': 'application/vnd.google-apps.spreadsheet',
+            'parents': [mission_id]
+        }
+        sheet_file = self.service.files().create(body=file_metadata, fields='id').execute()
+        sheet_id = sheet_file.get('id')
+
+        # Format the 9 Core Column Headers (Added Mastery_Score & Rep_Count)
+        headers = [["Timestamp", "Source", "Raw_Text", "Category", "Keywords", "Summary", "Chunk_Index", "Mastery_Score", "Rep_Count"]]
+        body = {'values': headers}
+
+        self.sheets_service.spreadsheets().values().update(
+            spreadsheetId=sheet_id, range="A1:I1", # <--- Updated to I1
+            valueInputOption="USER_ENTERED", body=body
+        ).execute()
+
+        print(f"📊 [CLOUD] Built Spreadsheet Brain for: {mission_name}")
+        return sheet_id
+
     def __init__(self):
         self.delegated_email = os.getenv("GOOGLE_DRIVE_DELEGATED_EMAIL")
         self.root_folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
         scopes = ['https://www.googleapis.com/auth/drive']
+
+        # 1. ADD THE SHEETS SCOPE HERE 👇
+        scopes = [
+            'https://www.googleapis.com/auth/drive',
+            'https://www.googleapis.com/auth/spreadsheets'
+        ]
 
         # --- THE RAILWAY SECRETS HACK ---
         google_json_env = os.getenv("GOOGLE_CREDENTIALS_JSON")
@@ -28,6 +68,9 @@ class CloudEngine:
 
         delegated_creds = creds.with_subject(self.delegated_email)
         self.service = build('drive', 'v3', credentials=delegated_creds)
+
+        # 👇 ADD THIS MISSING LINE FOR SHEETS 👇
+        self.sheets_service = build('sheets', 'v4', credentials=delegated_creds)
 
     def _get_folder_id(self, folder_name, parent_id):
         """Helper: Finds a folder ID by name inside a parent folder."""
@@ -126,8 +169,60 @@ class CloudEngine:
         media = MediaIoBaseUpload(io.BytesIO(updated_content.encode('utf-8')), mimetype='text/plain', resumable=True)
         self.service.files().update(fileId=file_id, media_body=media).execute()
 
+    def append_sheet_row(self, sheet_id, row_data):
+        """Appends a single row to the bottom of the Google Sheet."""
+        body = {'values': [row_data]}
+        self.sheets_service.spreadsheets().values().append(
+            spreadsheetId=sheet_id,
+            range="A:I", # <--- Expanded to column I
+            valueInputOption="USER_ENTERED",
+            insertDataOption="INSERT_ROWS",
+            body=body
+        ).execute()
+
+    def get_last_processed_chunk(self, sheet_id):
+        """Reads the bottom row of the sheet to find the last processed text."""
+        result = self.sheets_service.spreadsheets().values().get(
+            spreadsheetId=sheet_id, range="A:I" # <--- Expanded to column I
+        ).execute()
+
+        values = result.get('values', [])
+        if len(values) <= 1:
+            return None 
+
+        return values[-1][2] 
+
+    def get_all_sheet_rows(self, sheet_id):
+        """Downloads the entire spreadsheet into a list of rows."""
+        result = self.sheets_service.spreadsheets().values().get(
+            spreadsheetId=sheet_id, range="A:I" # <--- Expanded to column I
+        ).execute()
+
+        rows = result.get('values', [])
+
+        # --- BULLETPROOF PADDING FIX ---
+        if rows:
+            expected_length = len(rows[0])
+            for row in rows:
+                while len(row) < expected_length:
+                    row.append("")
+
+        return rows
+
+    def update_chunk_score(self, sheet_id, chunk_index, score, new_reps):
+        """Writes the Mastery Score and Rep Count to Columns H and I for a specific chunk."""
+        # Math: Index 0 is under the headers, so it's Row 2!
+        sheet_row = int(chunk_index) + 2  
+        range_name = f"H{sheet_row}:I{sheet_row}"
+        body = {'values': [[score, new_reps]]}
+
+        self.sheets_service.spreadsheets().values().update(
+            spreadsheetId=sheet_id, range=range_name,
+            valueInputOption="USER_ENTERED", body=body
+        ).execute()
+
 # ==========================================
-# QUICK TEST (Runs only if you execute this file directly)
+# QUICK TEST 
 # ==========================================
 if __name__ == "__main__":
     print("Initializing Cloud Engine...")
