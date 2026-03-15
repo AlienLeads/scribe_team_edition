@@ -102,6 +102,10 @@ When ending the session, you MUST output their final grade (0-100) on the very l
                 # Write to Cloud and clear the memory for next time!
                 sheet_id = cloud_engine.setup_memory_sheet(active_cartridge_name)
                 cloud_engine.update_chunk_score(sheet_id, chunk_idx, final_score, new_reps)
+
+                # 👇 THIS IS THE MAGIC FLUSH COMMAND 👇
+                st.cache_data.clear()
+                
                 if "socrates_context" in st.session_state: del st.session_state["socrates_context"]
 
                 final_message = clean_text.replace(score_match.group(0), f"\n\n*(System: Score of {final_score}% saved to database. Returning to Scribe...)*")
