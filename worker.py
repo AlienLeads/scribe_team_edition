@@ -53,15 +53,29 @@ def main():
         return
 
     # ==========================================
-    # THE GHOST MARKER: Slice off the old stuff!
+    # THE SMART GHOST MARKER: Slice off the old stuff!
     # ==========================================
     last_chunk = cloud.get_last_processed_chunk(sheet_id)
-    if last_chunk and last_chunk in raw_text:
-        print("👻 Ghost Marker found! Slicing off previously processed logs...")
-        raw_text = raw_text.split(last_chunk)[-1]
-        if not raw_text.strip():
-            print("✅ All logs are already in the Spreadsheet Brain. Nothing new to process!")
-            return
+    if last_chunk:
+        print("👻 Ghost Marker found! Attempting to slice off previously processed logs...")
+
+        # Grab the last 10 words of the chunk to act as our "Knife"
+        last_words = last_chunk.split()[-10:]
+        if last_words:
+            # Build a smart search that ignores messy line breaks and spaces between words
+            knife_pattern = r'\s+'.join([re.escape(w) for w in last_words])
+            match = re.search(knife_pattern, raw_text)
+
+            if match:
+                # Slice the giant text perfectly at the end of the match!
+                raw_text = raw_text[match.end():]
+                print("✂️ Slice successful! Only processing net-new text.")
+
+                if not raw_text.strip():
+                    print("✅ All logs are already in the Spreadsheet Brain. Nothing new to process!")
+                    return
+            else:
+                print("⚠️ Could not match Ghost Marker exactly. Processing entire log...")
     else:
         print("🌱 No Ghost Marker found. Processing entire log from the beginning...")
 
