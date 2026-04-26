@@ -276,6 +276,15 @@ with st.sidebar:
         st.session_state.brain_df = load_brain_to_ram(selected_mission)
         st.caption(f"🧠 Active Brain: {len(st.session_state.brain_df)} memory chunks loaded.")
 
+        # 👇 --- NEW MONDAY BYPASS: LOAD TRANSCRIPTS ONCE --- 👇
+        if "transcript_cache" not in st.session_state or selected_mission != st.session_state.get("last_transcript_mission"):
+            st.session_state.transcript_cache = cloud.get_all_transcripts(selected_mission)
+            st.session_state.last_transcript_mission = selected_mission
+
+        if st.session_state.transcript_cache:
+            st.caption("🎬 Video Transcripts loaded and ready.")
+        # 👆 ------------------------------------------------ 👆
+
         st.divider()
         # ==========================================
 
@@ -431,6 +440,11 @@ if prompt := st.chat_input("Input command..."):
     if text_payload_buffer:
         full_prompt_package += f"\n\n[SYSTEM: ATTACHED KNOWLEDGE BATCH]\n{text_payload_buffer}"
         st.toast("Sending text files to Brain...", icon="🚀")
+
+    # 👇 --- NEW MONDAY BYPASS: STAPLE TO PROMPT --- 👇
+    if st.session_state.get("transcript_cache"):
+        full_prompt_package += f"\n\n[SYSTEM: ATTACHED TRANSCRIPTS]\n{st.session_state.transcript_cache}"
+    # 👆 ------------------------------------------- 👆
 
     # --- NEW CHECK: Are we currently in a Quiz? (THE EARMUFFS) ---
     in_quiz_mode = False

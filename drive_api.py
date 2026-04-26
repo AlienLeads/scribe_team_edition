@@ -221,6 +221,49 @@ class CloudEngine:
             valueInputOption="USER_ENTERED", body=body
         ).execute()
 
+    def get_all_transcripts(self, mission_name):
+        """MONDAY BYPASS: Reads all transcript files in the 'transcripts' folder of a mission."""
+        # 1. Find the Mission Folder
+        mission_id = self._get_folder_id(mission_name, self.root_folder_id)
+        if not mission_id:
+            return ""
+
+        # 2. Find the 'transcripts' sub-folder
+        transcripts_folder_id = self._get_folder_id("transcripts", mission_id)
+        if not transcripts_folder_id:
+            return "" # No transcripts folder exists yet
+
+        # 3. Get all files inside the transcripts folder
+        query = f"'{transcripts_folder_id}' in parents and trashed=false"
+        results = self.service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+        files = results.get('files', [])
+
+        if not files:
+            return ""
+
+        combined_transcripts = ""
+
+        # 4. Download and concatenate each text/vtt file
+        for file in files:
+            file_name = file['name']
+            file_id = file['id']
+
+            # Only read text or vtt files to prevent crashes
+            if not (file_name.endswith('.txt') or file_name.endswith('.vtt')):
+                continue
+
+            request = self.service.files().get_media(fileId=file_id)
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+
+            file_text = fh.getvalue().decode('utf-8')
+            combined_transcripts += f"\n\n--- Transcript Source: {file_name} ---\n{file_text}"
+
+        return combined_transcripts
+
 # ==========================================
 # QUICK TEST 
 # ==========================================
